@@ -17,6 +17,7 @@ import {
   Select,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from "@mui/material";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -26,10 +27,13 @@ const Spends = () => {
   const [spendName, setSpendName] = useState("");
   const [spendMoney, setSpendMoney] = useState("");
   const [spendData, setSpendDate] = useState([]);
-  const [savingData,setSavingData] =useState([]);
+  const [savingData, setSavingData] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [filteredSpends, setFilteredSpends] = useState([]);
+  const [deletingId, setDeletingId] = useState(null);
+  const [loadingAdd, setLoadingAdd] = useState(false);
+  const [handleError, setHandleError] = useState('');
   const months = [
     "January",
     "February",
@@ -74,33 +78,46 @@ const Spends = () => {
   };
 
   const addSpend = async () => {
-    try {
-      const postData = await axios.post(
-        `${import.meta.env.VITE_BASE_API}/api/spends`,
-        {
-          spendName,
-          spendMoney,
-        }
-      );
-      console.log(postData);
-      setSpendMoney("");
-      setSpendName("");
-      getSpends();
-      getSavings();
-    } catch (error) {
-      console.error(error);
+    if (spendName === '' || spendMoney === '') {
+      setHandleError("Please fill both fields!");
+    } else {
+      try {
+        setLoadingAdd(true);
+        const postData = await axios.post(
+          `${import.meta.env.VITE_BASE_API}/api/spends`,
+          {
+            spendName,
+            spendMoney,
+          }
+        );
+        console.log(postData);
+        setSpendMoney("");
+        setSpendName("");
+        getSpends();
+        getSavings();
+        setLoadingAdd(false);
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
-  const deleteSpend = async(id) => {
+  const deleteSpend = async (id) => {
     try {
-        const deleteData = await axios.delete(`${import.meta.env.VITE_BASE_API}/api/spends/${id}`)
-        console.log(deleteData);
-        getSpends();
-        getSavings();
+      setDeletingId(id);
+      const deleteData = await axios.delete(
+        `${import.meta.env.VITE_BASE_API}/api/spends/${id}`
+      );
+      console.log(deleteData);
+      getSpends();
+      getSavings();
+      setDeletingId(null);
     } catch (error) {
-        console.log(error)
+      console.log(error);
     }
+  };
+  const handleFocus =()=>{
+    setHandleError('');
   }
 
   // Filter spending data based on selected year and month
@@ -137,7 +154,7 @@ const Spends = () => {
     const savingDate = new Date(saving.createdAt);
     const savingYear = savingDate.getFullYear();
     const savingMonth = savingDate.getMonth() + 1; // Months are zero-indexed
-  
+
     // Check if the saving entry matches the selected year and month
     if (
       (selectedYear === "" || savingYear === Number(selectedYear)) &&
@@ -147,7 +164,6 @@ const Spends = () => {
     }
     return acc; // Otherwise, return the accumulated value
   }, 0);
-  
 
   // Get unique years for the dropdown
   const uniqueYears = [
@@ -162,13 +178,18 @@ const Spends = () => {
       <Typography sx={{ fontSize: 22 }}>Spends</Typography>
 
       {/* Add Spend Form */}
-      <Stack mb={2} mt={2} sx={{border:1,p:2,borderRadius:6,borderColor:'#aeaeae'}}>
+      <Stack
+        mb={2}
+        mt={2}
+        sx={{ border: 1, p: 2, borderRadius: 6, borderColor: "#aeaeae" }}
+      >
         <TextField
           id="standard-basic"
           label="Spend Name"
           variant="standard"
           sx={{ mb: 4 }}
           value={spendName}
+          onFocus={handleFocus}
           onChange={(e) => setSpendName(e.target.value)}
         />
         <TextField
@@ -176,21 +197,39 @@ const Spends = () => {
           label="Spent Amount"
           type="number"
           variant="standard"
-          sx={{ mb: 4 }}
+          sx={{ mb: 2 }}
           value={spendMoney}
+          onFocus={handleFocus}
+
           onChange={(e) => setSpendMoney(e.target.value)}
         />
+    
+          {handleError && (
+                          <Typography sx={{color:"#B82132",mb:2,fontSize:12}}>{handleError}</Typography>
+
+          )}
+    
         <Button
           fullWidth
           variant="contained"
-          sx={{ height:50,backgroundColor:'#fcdcdc',color:'#B82132',boxShadow:'none',borderRadius:3 }}
+          sx={{
+            height: 50,
+            backgroundColor: "#fcdcdc",
+            color: "#B82132",
+            boxShadow: "none",
+            borderRadius: 3,
+          }}
           onClick={addSpend}
         >
-          Add Spend
+          {loadingAdd ? (
+            <CircularProgress size={24} sx={{ color: "#B82132" }} />
+          ) : (
+            <>Add Spend</>
+          )}
         </Button>
       </Stack>
-       {/* Filters Section */}
-       <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
+      {/* Filters Section */}
+      <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Year</InputLabel>
           <Select
@@ -230,7 +269,14 @@ const Spends = () => {
       </Stack>
       {/* Spending Insight */}
       <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
-        <Box sx={{ backgroundColor: "#fcdcdc", p: 1.5, width: "40%",borderRadius:2 }}>
+        <Box
+          sx={{
+            backgroundColor: "#fcdcdc",
+            p: 1.5,
+            width: "40%",
+            borderRadius: 2,
+          }}
+        >
           <Typography sx={{ fontSize: 14, color: "#B82132" }}>
             Total Spends
           </Typography>
@@ -239,7 +285,14 @@ const Spends = () => {
             ₹{totalSpend}
           </Typography>
         </Box>
-        <Box sx={{ backgroundColor: "#dcfce1", p: 1.5, width: "40%",borderRadius:2 }}>
+        <Box
+          sx={{
+            backgroundColor: "#dcfce1",
+            p: 1.5,
+            width: "40%",
+            borderRadius: 2,
+          }}
+        >
           <Typography
             sx={{ fontSize: 14, color: "#00712D", textAlign: "right" }}
           >
@@ -259,7 +312,14 @@ const Spends = () => {
         </Box>
       </Stack>
       <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
-        <Box sx={{ backgroundColor: "#faebd7", p: 1.5, width: "40%",borderRadius:2 }}>
+        <Box
+          sx={{
+            backgroundColor: "#faebd7",
+            p: 1.5,
+            width: "40%",
+            borderRadius: 2,
+          }}
+        >
           <Typography sx={{ fontSize: 14, color: "#fc9d17" }}>
             Total Spends
           </Typography>
@@ -268,13 +328,12 @@ const Spends = () => {
             ₹{totalRemaining}
           </Typography>
         </Box>
-
       </Stack>
       {/* Spending List */}
       <Stack>
- 
-
-        <TableContainer sx={{ mt: 1,border:1,borderColor:'#aeaeae',borderRadius:6 }}>
+        <TableContainer
+          sx={{ mt: 1, border: 1, borderColor: "#aeaeae", borderRadius: 6 }}
+        >
           <Table>
             <TableHead>
               <TableRow>
@@ -293,21 +352,39 @@ const Spends = () => {
                   <TableCell>
                     <Stack direction={"row"} spacing={2} alignItems={"center"}>
                       <IconButton onClick={() => deleteSpend(spend._id)}>
-                        <DeleteIcon sx={{ color: "#2e2e2e" }} />
+                        {deletingId === spend._id ? (
+                          <CircularProgress size={24} sx={{ color: "black" }} />
+                        ) : (
+                          <DeleteIcon sx={{ color: "#2e2e2e" }} />
+                        )}
                       </IconButton>
                     </Stack>
                   </TableCell>
                 </TableRow>
               ))}
-             
             </TableBody>
           </Table>
         </TableContainer>
-        <Box sx={{backgroundColor:'#fcdcdc',color:'#B82132',borderRadius:3,mt:2}}>
-<Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} p={2}>
-<Typography>Total</Typography>
-<Typography sx={{fontWeight:700,fontSize:18}}> ₹{totalSpend}</Typography>
-</Stack>
+        <Box
+          sx={{
+            backgroundColor: "#fcdcdc",
+            color: "#B82132",
+            borderRadius: 3,
+            mt: 2,
+          }}
+        >
+          <Stack
+            direction={"row"}
+            alignItems={"center"}
+            justifyContent={"space-between"}
+            p={2}
+          >
+            <Typography>Total</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 18 }}>
+              {" "}
+              ₹{totalSpend}
+            </Typography>
+          </Stack>
         </Box>
       </Stack>
     </Stack>

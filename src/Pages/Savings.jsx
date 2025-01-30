@@ -17,6 +17,7 @@ import {
   Select,
   FormControl,
   InputLabel,
+  CircularProgress
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
@@ -30,6 +31,10 @@ const Savings = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [filteredSavings, setFilteredSavings] = useState([]);
   const [filteredSpends, setFilteredSpends] = useState([]);
+  const [deletingId, setDeletingId] = useState(null);
+  const [loadingAdd,setLoadingAdd] = useState(false);
+    const [handleError, setHandleError] = useState("");
+  
 
   const months = [
     "January",
@@ -76,32 +81,47 @@ const Savings = () => {
   };
 
   const addSaving = async () => {
-    try {
-      const postData = await axios.post(
-        `${import.meta.env.VITE_BASE_API}/api/savings`,
-        {
-          savingName,
-          savingMoney,
-        }
-      );
-      setSavingMoney("");
-      setSavingName("");
-      getSavings();
-    } catch (error) {
-      console.error(error);
+    if(savingName==='' || savingMoney === ''){
+      setHandleError("Please fill both fields!");
+    }else{
+      try {
+        setLoadingAdd(true);
+        const postData = await axios.post(
+          `${import.meta.env.VITE_BASE_API}/api/savings`,
+          {
+            savingName,
+            savingMoney,
+          }
+        );
+        setSavingMoney("");
+        setSavingName("");
+        getSavings();
+        getSpends();
+        setLoadingAdd(false);
+      } catch (error) {
+        console.error(error);
+      }
     }
+   
   };
 
   const deleteSaving = async (id) => {
     try {
+      setDeletingId(id);
       const deleteData = await axios.delete(
         `${import.meta.env.VITE_BASE_API}/api/savings/${id}`
       );
       getSavings();
+      getSpends();
+      setDeletingId(null);
     } catch (error) {
       console.log(error);
     }
   };
+  const handleFocus =()=>{
+    setHandleError('');
+  }
+
 
   // Filter savings and spends data based on selected year and month
   useEffect(() => {
@@ -150,6 +170,8 @@ const Savings = () => {
           variant="standard"
           sx={{ mb: 4 }}
           value={savingName}
+          onFocus={handleFocus}
+
           onChange={(e) => setSavingName(e.target.value)}
         />
         <TextField
@@ -157,17 +179,27 @@ const Savings = () => {
           label="Saved Amount"
           variant="standard"
           type="number"
-          sx={{ mb: 4 }}
+          sx={{ mb: 2 }}
           value={savingMoney}
+          onFocus={handleFocus}
+
           onChange={(e) => setSavingMoney(e.target.value)}
         />
+        {handleError && (
+                                  <Typography sx={{color:"#B82132",mb:2,fontSize:12}}>{handleError}</Typography>
+        
+                  )}
         <Button
           fullWidth
           variant="contained"
           sx={{ height:50,color:'#00712D',backgroundColor:'#dcfce1',boxShadow:'none',borderRadius:3 }}
           onClick={addSaving}
         >
-          Add Saving
+           {loadingAdd ? (
+                     <CircularProgress size={24} sx={{color:'#00712D'}} />
+                   ):(
+                     <>Add Saving</>
+                   )}
         </Button>
       </Stack>
 
@@ -265,7 +297,12 @@ const Savings = () => {
                   <TableCell>{saving.savingMoney}</TableCell>
                   <TableCell>
                     <IconButton onClick={() => deleteSaving(saving._id)}>
-                      <DeleteIcon sx={{ color: "#2e2e2e" }} />
+                    {deletingId === saving._id ? (
+<CircularProgress size={24} sx={{color:'black'}} />
+                        ):(
+                          <DeleteIcon sx={{ color: "#2e2e2e" }} />
+
+                        )}
                     </IconButton>
                   </TableCell>
                 </TableRow>
