@@ -33,7 +33,8 @@ const Spends = () => {
   const [filteredSpends, setFilteredSpends] = useState([]);
   const [deletingId, setDeletingId] = useState(null);
   const [loadingAdd, setLoadingAdd] = useState(false);
-  const [handleError, setHandleError] = useState('');
+  const [handleError, setHandleError] = useState("");
+  const [tableLoading, setTableLoading] = useState(false);
   const months = [
     "January",
     "February",
@@ -48,6 +49,13 @@ const Spends = () => {
     "November",
     "December",
   ];
+  const currentDate = new Date();
+  const formattedDate = currentDate.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
   useEffect(() => {
     getSpends();
     getSavings();
@@ -55,12 +63,14 @@ const Spends = () => {
 
   const getSpends = async () => {
     try {
+      setTableLoading(true);
       const getData = await axios.get(
         `${import.meta.env.VITE_BASE_API}/api/spends`
       );
       console.log(getData.data);
       setSpendDate(getData.data);
       setFilteredSpends(getData.data); // Initially, show all data
+      setTableLoading(false);
     } catch (error) {
       console.error(error);
     }
@@ -78,7 +88,7 @@ const Spends = () => {
   };
 
   const addSpend = async () => {
-    if (spendName === '' || spendMoney === '') {
+    if (spendName === "" || spendMoney === "") {
       setHandleError("Please fill both fields!");
     } else {
       try {
@@ -116,9 +126,9 @@ const Spends = () => {
       console.log(error);
     }
   };
-  const handleFocus =()=>{
-    setHandleError('');
-  }
+  const handleFocus = () => {
+    setHandleError("");
+  };
 
   // Filter spending data based on selected year and month
   useEffect(() => {
@@ -167,20 +177,28 @@ const Spends = () => {
 
   // Get unique years for the dropdown
   const uniqueYears = [
-    ...new Set(
-      spendData.map((spend) => new Date(spend.createdAt).getFullYear())
-    ),
-  ];
+    ...new Set([
+      ...spendData.map((spend) => new Date(spend.createdAt).getFullYear()),
+      ...savingData.map((saving) => new Date(saving.createdAt).getFullYear()),
+    ]),
+  ].sort((a, b) => b - a); // Sorting in descending order
   const totalRemaining = totalSavings - totalSpend;
 
   return (
     <Stack>
-      <Typography sx={{ fontSize: 22 }}>Spends</Typography>
+      <Stack
+        direction={"row"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+      >
+        <Typography sx={{ fontSize: 22 }}>Spends</Typography>
+        <Typography sx={{ fontSize: 14 }}>{formattedDate}</Typography>
+      </Stack>
 
       {/* Add Spend Form */}
       <Stack
         mb={2}
-        mt={2}
+        mt={1}
         sx={{ border: 1, p: 2, borderRadius: 6, borderColor: "#aeaeae" }}
       >
         <TextField
@@ -200,15 +218,15 @@ const Spends = () => {
           sx={{ mb: 2 }}
           value={spendMoney}
           onFocus={handleFocus}
-
           onChange={(e) => setSpendMoney(e.target.value)}
         />
-    
-          {handleError && (
-                          <Typography sx={{color:"#B82132",mb:2,fontSize:12}}>{handleError}</Typography>
 
-          )}
-    
+        {handleError && (
+          <Typography sx={{ color: "#B82132", mb: 2, fontSize: 12 }}>
+            {handleError}
+          </Typography>
+        )}
+
         <Button
           fullWidth
           variant="contained"
@@ -296,7 +314,7 @@ const Spends = () => {
           <Typography
             sx={{ fontSize: 14, color: "#00712D", textAlign: "right" }}
           >
-            Total Savings
+            Total Income
           </Typography>
 
           <Typography
@@ -321,7 +339,7 @@ const Spends = () => {
           }}
         >
           <Typography sx={{ fontSize: 14, color: "#fc9d17" }}>
-            Total Spends
+            Total Savings
           </Typography>
 
           <Typography sx={{ fontSize: 18, color: "#fc9d17", fontWeight: 700 }}>
@@ -330,63 +348,88 @@ const Spends = () => {
         </Box>
       </Stack>
       {/* Spending List */}
-      <Stack>
-        <TableContainer
-          sx={{ mt: 1, border: 1, borderColor: "#aeaeae", borderRadius: 6 }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredSpends.map((spend, index) => (
-                <TableRow key={spend._id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{spend.spendName}</TableCell>
-                  <TableCell>{spend.spendMoney}</TableCell>
-                  <TableCell>
-                    <Stack direction={"row"} spacing={2} alignItems={"center"}>
-                      <IconButton onClick={() => deleteSpend(spend._id)}>
-                        {deletingId === spend._id ? (
-                          <CircularProgress size={24} sx={{ color: "black" }} />
-                        ) : (
-                          <DeleteIcon sx={{ color: "#2e2e2e" }} />
-                        )}
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box
-          sx={{
-            backgroundColor: "#fcdcdc",
-            color: "#B82132",
-            borderRadius: 3,
-            mt: 2,
-          }}
-        >
-          <Stack
-            direction={"row"}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            p={2}
+      {tableLoading ? (
+        <Stack direction={"row"} justifyContent={"center"} mt={10} mb={10}>
+          <CircularProgress sx={{ color: "#faebd7" }} />
+        </Stack>
+      ) : (
+        <Stack>
+          <TableContainer
+            sx={{ mt: 1, border: 1, borderColor: "#aeaeae", borderRadius: 6 }}
           >
-            <Typography>Total</Typography>
-            <Typography sx={{ fontWeight: 700, fontSize: 18 }}>
-              {" "}
-              ₹{totalSpend}
-            </Typography>
-          </Stack>
-        </Box>
-      </Stack>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+              {filteredSpends
+  .slice()
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort in descending order
+  .map((spend, index) => (
+    <TableRow key={spend._id}>
+      <TableCell>{index + 1}</TableCell>
+      <TableCell>
+        <Stack>{spend.spendName}</Stack>
+        <Stack sx={{ fontSize: 12, color: "#aeaeae" }}>
+          {new Date(spend.createdAt)
+            .toLocaleString("en-IN", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+              timeZone: "Asia/Kolkata",
+            })
+            .replace(" at", "")}
+        </Stack>
+      </TableCell>
+      <TableCell>{spend.spendMoney}</TableCell>
+      <TableCell>
+        <Stack direction={"row"} spacing={2} alignItems={"center"}>
+          <IconButton onClick={() => deleteSpend(spend._id)}>
+            {deletingId === spend._id ? (
+              <CircularProgress size={24} sx={{ color: "black" }} />
+            ) : (
+              <DeleteIcon sx={{ color: "#2e2e2e" }} />
+            )}
+          </IconButton>
+        </Stack>
+      </TableCell>
+    </TableRow>
+  ))}
+
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Box
+            sx={{
+              backgroundColor: "#fcdcdc",
+              color: "#B82132",
+              borderRadius: 3,
+              mt: 2,
+            }}
+          >
+            <Stack
+              direction={"row"}
+              alignItems={"center"}
+              justifyContent={"space-between"}
+              p={2}
+            >
+              <Typography>Total</Typography>
+              <Typography sx={{ fontWeight: 700, fontSize: 18 }}>
+                {" "}
+                ₹{totalSpend}
+              </Typography>
+            </Stack>
+          </Box>
+        </Stack>
+      )}
     </Stack>
   );
 };
