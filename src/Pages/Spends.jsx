@@ -155,6 +155,7 @@ const Spends = () => {
       spendData.map((spend) => new Date(spend.createdAt).getFullYear())
     ),
   ];
+  const totalRemaining = totalSavings - totalSpend;
 
   return (
     <Stack>
@@ -256,6 +257,18 @@ const Spends = () => {
             ₹{totalSavings}
           </Typography>
         </Box>
+      </Stack>
+      <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
+        <Box sx={{ backgroundColor: "#faebd7", p: 1.5, width: "40%",borderRadius:2 }}>
+          <Typography sx={{ fontSize: 14, color: "#fc9d17" }}>
+            Total Spends
+          </Typography>
+
+          <Typography sx={{ fontSize: 18, color: "#fc9d17", fontWeight: 700 }}>
+            ₹{totalRemaining}
+          </Typography>
+        </Box>
+
       </Stack>
       {/* Spending List */}
       <Stack>
