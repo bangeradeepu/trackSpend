@@ -142,12 +142,12 @@ const Savings = () => {
       <Typography sx={{ fontSize: 22 }}>Savings</Typography>
 
       {/* Add Saving Form */}
-      <Stack mb={2}>
+      <Stack mb={2} mt={2} sx={{border:1,p:2,borderRadius:6,borderColor:'#aeaeae'}}>
         <TextField
           id="standard-basic"
           label="Saving Name"
           variant="standard"
-          sx={{ mb: 2 }}
+          sx={{ mb: 4 }}
           value={savingName}
           onChange={(e) => setSavingName(e.target.value)}
         />
@@ -155,6 +155,7 @@ const Savings = () => {
           id="standard-basic"
           label="Saved Amount"
           variant="standard"
+          type="number"
           sx={{ mb: 4 }}
           value={savingMoney}
           onChange={(e) => setSavingMoney(e.target.value)}
@@ -162,7 +163,7 @@ const Savings = () => {
         <Button
           fullWidth
           variant="contained"
-          sx={{ backgroundColor: "#2e2e2e" }}
+          sx={{ height:50,color:'#00712D',backgroundColor:'#dcfce1',boxShadow:'none',borderRadius:3 }}
           onClick={addSaving}
         >
           Add Saving
@@ -211,37 +212,35 @@ const Savings = () => {
 
       {/* Insights Section */}
       <Stack direction={"row"} justifyContent={"space-between"} mb={2}>
-        <Box sx={{ backgroundColor: "#B82132", p: 1.5, width: "50%" }}>
-          <Typography sx={{ fontSize: 14, color: "#ffffff" }}>
+        <Box sx={{ backgroundColor: "#fcdcdc", p: 1.5, width: "40%",borderRadius:2 }}>
+          <Typography sx={{ fontSize: 14, color: "#B82132" }}>
             Total Spends
           </Typography>
-          <Typography sx={{ fontSize: 18, color: "#ffffff", fontWeight: 700 }}>
-            ${totalSpends}
+          <Typography sx={{ fontSize: 18, color: "#B82132", fontWeight: 700 }}>
+            ₹{totalSpends}
           </Typography>
         </Box>
-        <Box sx={{ backgroundColor: "#00712D", p: 1.5, width: "50%" }}>
-          <Typography sx={{ fontSize: 14, color: "#ffffff",textAlign:'right' }}>
+        <Box sx={{ backgroundColor: "#dcfce1", p: 1.5, width: "40%",borderRadius:2 }}>
+          <Typography sx={{ fontSize: 14, color: "#00712D",textAlign:'right' }}>
             Total Savings
           </Typography>
-          <Typography sx={{ fontSize: 18, color: "#ffffff", fontWeight: 700,textAlign:'right' }}>
-            ${totalSavings}
+          <Typography sx={{ fontSize: 18, color: "#00712D", fontWeight: 700,textAlign:'right' }}>
+            ₹{totalSavings}
           </Typography>
         </Box>
       </Stack>
 
       {/* Spending List */}
       <Stack>
-        <Stack direction={"row"} justifyContent={"space-between"}>
-          <Typography>Savings List</Typography>
-        </Stack>
 
-        <TableContainer sx={{ mt: 2 }}>
+
+        <TableContainer sx={{ mt: 1,border:1,borderColor:'#aeaeae',borderRadius:6 }}>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Saving Name</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Saved Amount</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Amount</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -258,21 +257,16 @@ const Savings = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow>
-                <TableCell>
-                  <Typography sx={{ fontWeight: 700 }}>Total</Typography>
-                </TableCell>
-                <TableCell></TableCell>
-                <TableCell>
-                  <Typography sx={{ fontWeight: 700 }}>
-                    ${totalSavings}
-                  </Typography>
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
+
             </TableBody>
           </Table>
         </TableContainer>
+         <Box sx={{backgroundColor:'#dcfce1',color:'#00712D',borderRadius:3,mt:2}}>
+        <Stack direction={'row'} alignItems={'center'} justifyContent={'space-between'} p={2}>
+        <Typography>Total</Typography>
+        <Typography sx={{fontWeight:700,fontSize:18}}> ₹{totalSavings}</Typography>
+        </Stack>
+                </Box>
       </Stack>
     </Stack>
   );
